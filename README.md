@@ -25,6 +25,8 @@ docker compose exec -T app pytest -q
 
 换乘按上次有效付费行程的时间窗计算，优惠与日封顶按确定顺序裁决并保留分币守恒。
 
+临时改道或跨线借车时，票务线路以**调度任务**认定：任务覆盖本次刷卡即采用任务线路，车载机打印编码保留为证据，仅在调度无法裁决时回退（未提供调度、无任务号、任务未登记、时段未覆盖、车辆不符）。每张卡每个业务日只产出一套换乘与封顶结果；页面逐程显示实际任务、打印编码、采用的票务线路及线路差异。
+
 ## 演示
 
 1. 打开首页，核对当次计算、差异和隔离原因。
@@ -34,9 +36,9 @@ docker compose exec -T app pytest -q
 
 ## 输入与输出
 
-输入列见 `docs/DATA-DICTIONARY.md`。项目包含dirty.csv、clean.csv、legacy.csv，统一走实际导入路径。上传限制4MB，拒绝不带时区的时间。业务键按字符串保留，Decimal参与计算，空值不会当零。
+输入列见 `docs/DATA-DICTIONARY.md`。项目包含dirty.csv、clean.csv、legacy.csv，统一走实际导入路径；borrowed.csv 为临时改道/借车样例，配 `sample_data/dispatch.csv` 调度依据。上传限制4MB，拒绝不带时区的时间。业务键按字符串保留，Decimal参与计算，空值不会当零。
 
-`POST /api/runs` 接收sample或csv；`GET /api/runs`返回历史批次；`POST /api/runs/<id>/review`需要version与decision；`GET /api/runs/<id>/archive`返回唯一证据导出。
+`POST /api/runs` 接收sample、csv或dispatch；`GET /api/runs`返回历史批次；`POST /api/runs/<id>/review`需要version与decision；`GET /api/runs/<id>/archive`返回唯一证据导出。
 
 ## 范围
 

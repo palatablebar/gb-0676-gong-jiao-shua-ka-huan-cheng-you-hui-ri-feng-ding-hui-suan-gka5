@@ -25,12 +25,18 @@ def create_app():
         if not isinstance(params,dict): raise DomainError("BAD_PARAMETERS","参数需要对象")
         raw=payload.get("csv")
         if raw is not None and not isinstance(raw,str): raise DomainError("BAD_CSV","CSV需要文本")
-        return pipeline.execute(raw.encode() if raw is not None else pipeline.load_sample(payload.get("sample","dirty.csv")),params)
+        dispatch=payload["dispatch"] if "dispatch" in payload else None
+        if raw is not None:
+            return pipeline.execute(raw.encode(),params,dispatch)
+        name=payload.get("sample","dirty.csv")
+        if dispatch is None and "dispatch" not in payload: dispatch=pipeline.sample_dispatch(name)
+        return pipeline.execute(pipeline.load_sample(name),params,dispatch)
     @application.post("/api/upload")
     def upload():
         file=request.files.get("file")
         if not file: raise DomainError("NO_FILE","请选择CSV文件")
-        return pipeline.execute(file.read())
+        dispatch=request.form.get("dispatch")
+        return pipeline.execute(file.read(),dispatch=dispatch if dispatch not in (None,"") else None)
     @application.get("/api/runs")
     def history(): return {"runs":store.history()}
     @application.get("/api/runs/<run_id>")
